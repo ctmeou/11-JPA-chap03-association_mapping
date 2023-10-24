@@ -2,10 +2,9 @@ package com.ohgiraffers.section01.manytoone;
 
 import org.junit.jupiter.api.*;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import javax.persistence.*;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class ManyToOneAssociationTests {
@@ -74,6 +73,29 @@ public class ManyToOneAssociationTests {
 
     @Test
     public void 다대일_연관관계_객체_삽입_테스트() {
+
+        // given
+        MenuAndCategory menuAndCategory = new MenuAndCategory();
+        menuAndCategory.setMenuCode(9999);
+        menuAndCategory.setMenuName("죽방멸치빙수");
+        menuAndCategory.setMenuPrice(30000);
+        Category category = new Category(); //category도 추가로 insert되는지 추가 작성
+        category.setCategoryCode(444);
+        category.setCategoryName("신규카테고리");
+        category.setRefCategoryCode(1);
+        menuAndCategory.setCategory(category);
+        menuAndCategory.setOrderableStatus("Y");
+
+        // when
+        EntityTransaction entityTransaction = entityManager.getTransaction();
+        entityTransaction.begin();
+        entityManager.persist(menuAndCategory);
+        entityTransaction.commit();
+
+        // then
+        MenuAndCategory foundMenuAndCategory = entityManager.find(MenuAndCategory.class, 9999);
+        assertEquals(9999, foundMenuAndCategory.getMenuCode());
+        assertEquals(444, foundMenuAndCategory.getCategory().getCategoryCode());
 
     }
 
