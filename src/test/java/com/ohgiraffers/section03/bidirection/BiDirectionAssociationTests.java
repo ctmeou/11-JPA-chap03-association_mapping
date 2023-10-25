@@ -4,6 +4,7 @@ import org.junit.jupiter.api.*;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -54,9 +55,9 @@ public class BiDirectionAssociationTests {
         assertEquals(categoryCode, foundCategory.getCategoryCode());
 
         /* 주의 사항
-        * toString 오버라이딩 시 양방향 연관 관계는 재귀 호출이 일어나기 때문에 stackOverFlowError가 발생한다.
-        * 엔티티의 주인이 아닌 쪽이 toString에서 연관 객체 부분이 출력되지 않도록 삭제한다.
-        * 특히 자동 완성 or 롬북 라이브러리 사용 시 주의한다. */
+         * toString 오버라이딩 시 양방향 연관 관계는 재귀 호출이 일어나기 때문에 stackOverFlowError가 발생한다.
+         * 엔티티의 주인이 아닌 쪽이 toString에서 연관 객체 부분이 출력되지 않도록 삭제한다.
+         * 특히 자동 완성 or 롬북 라이브러리 사용 시 주의한다. */
         System.out.println(foundMenu);
         System.out.println(foundCategory);
 
@@ -68,4 +69,53 @@ public class BiDirectionAssociationTests {
         foundMenu.getCategory().getMenuList().forEach(System.out::println);
 
     }
+
+    //하나의 테이블에만 insert할 경우
+    @Test
+    public void 양방향_연관관계_주인_객체를_이용한_삽입_테스트() {
+
+        // given
+        Menu menu = new Menu();
+        menu.setMenuCode(2222);
+        menu.setMenuName("연관관계주인메뉴");
+        menu.setMenuPrice(10000);
+        menu.setOrderableStatus("Y");
+        menu.setCategory(entityManager.find(Category.class, 4)); //신규 카테고리가 아닌 기존 카테고리일 경우 엔티티 설정
+
+        // when
+        EntityTransaction entityTransaction = entityManager.getTransaction();
+        entityTransaction.begin();
+        entityManager.persist(menu);
+        entityTransaction.commit();
+
+        // then
+        Menu foundMenu = entityManager.find(Menu.class, menu.getMenuCode());
+        assertEquals(menu.getMenuCode(), foundMenu.getMenuCode());
+        System.out.println(foundMenu);
+
+    }
+
+    //주인이 아닌 경우에 삽입을 할 경우
+    @Test
+    public void 양방향_연관관계_주인이_아닌_객체를_이용한_삽입_테스트() {
+
+        // given
+        Category category = new Category();
+        category.setCategoryCode(1004);
+        category.setCategoryName("양방향카테고리");
+        category.setRefCategoryCode(1);
+
+        // when
+        EntityTransaction entityTransaction = entityManager.getTransaction();
+        entityTransaction.begin();
+        entityManager.persist(category);
+        entityTransaction.commit();
+
+        // then
+        Category foundCategory = entityManager.find(Category.class, category.getCategoryCode());
+        assertEquals(category.getCategoryCode(), foundCategory.getCategoryCode());
+        System.out.println(foundCategory);
+
+    }
+
 }
